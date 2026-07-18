@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { teachingJournalsService } from "@/services/teaching-journals";
 import { schedulesService } from "@/services/schedules";
@@ -20,12 +21,46 @@ export default function MobileTeachingJournalsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingJournal, setEditingJournal] = useState<TeachingJournal | null>(null);
 
-  // Data states
-  const [journals, setJournals] = useState<TeachingJournal[]>([]);
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Query Lookups
+  const { data: rawJournals = [], isLoading: loadingJournals, refetch: refetchJournals } = useQuery<TeachingJournal[]>({ 
+    queryKey: ["journals"],
+    queryFn: () => teachingJournalsService.getAll(),
+  });
+
+  const { data: rawSchedules = [], isLoading: loadingSchedules } = useQuery<Schedule[]>({ 
+    queryKey: ["schedules"],
+    queryFn: () => schedulesService.getAll(),
+  });
+
+  const { data: classes = [], isLoading: loadingClasses } = useQuery<Class[]>({ 
+    queryKey: ["classes"],
+    queryFn: () => classesService.getAll(),
+  });
+
+  const { data: subjects = [], isLoading: loadingSubjects } = useQuery<Subject[]>({ 
+    queryKey: ["subjects"],
+    queryFn: () => subjectsService.getAll(),
+  });
+
+  const schedules = useMemo(() => {
+    return rawSchedules.map((sched) => ({
+      ...sched,
+      class: classes.find((c) => c.id === sched.classId),
+      subject: subjects.find((sub) => sub.id === sched.subjectId),
+    }));
+  }, [rawSchedules, classes, subjects]);
+
+  const journals = useMemo(() => {
+    return rawJournals.map((j) => {
+      const sched = schedules.find((s) => s.id === j.scheduleId);
+      return {
+        ...j,
+        schedule: sched,
+      };
+    });
+  }, [rawJournals, schedules]);
+
+  const loading = loadingJournals || loadingSchedules || loadingClasses || loadingSubjects;
 
   // Form states
   const [scheduleId, setScheduleId] = useState<string>("");
@@ -42,57 +77,21 @@ export default function MobileTeachingJournalsPage() {
   const [recapDate, setRecapDate] = useState<string>(new Date().toISOString().split("T")[0]);
   const [recapMonth, setRecapMonth] = useState<string>(new Date().toISOString().slice(0, 7));
 
-  const fetchMainData = async () => {
-    setLoading(true);
-    try {
-      const [journalList, schedList, classList, subjectList] = await Promise.all([
-        teachingJournalsService.getAll().catch(() => []),
-        schedulesService.getAll().catch(() => []),
-        classesService.getAll().catch(() => []),
-        subjectsService.getAll().catch(() => []),
-      ]);
-
-      const enrichedSchedulesList = schedList.map((sched) => ({
-        ...sched,
-        class: classList.find((c) => c.id === sched.classId),
-        subject: subjectList.find((sub) => sub.id === sched.subjectId),
-      }));
-
-      const enrichedJournals = journalList.map((j) => {
-        const sched = enrichedSchedulesList.find((s) => s.id === j.scheduleId);
-        return {
-          ...j,
-          schedule: sched,
-        };
-      });
-
-      setJournals(enrichedJournals);
-      setSchedules(enrichedSchedulesList);
-      setClasses(classList);
-      setSubjects(subjectList);
-
-      if (classList.length > 0) {
-        setRecapClassId(String(classList[0].id));
-      }
-
-      // Handle direct redirect from schedules
-      const queryScheduleId = searchParams.get("scheduleId");
-      if (queryScheduleId) {
-        setScheduleId(queryScheduleId);
-        setIsFormOpen(true);
-      } else if (enrichedSchedulesList.length > 0) {
-        setScheduleId(String(enrichedSchedulesList[0].id));
-      }
-    } catch (err) {
-      toast.error("Gagal memuat data utama");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (classes.length > 0 && !recapClassId) {
+      setRecapClassId(String(classes[0].id));
     }
-  };
+  }, [classes, recapClassId]);
 
   useEffect(() => {
-    fetchMainData();
-  }, [searchParams]);
+    const queryScheduleId = searchParams.get("scheduleId");
+    if (queryScheduleId) {
+      setScheduleId(queryScheduleId);
+      setIsFormOpen(true);
+    } else if (schedules.length > 0 && !scheduleId) {
+      setScheduleId(String(schedules[0].id));
+    }
+  }, [searchParams, schedules, scheduleId]);
 
   const handleEdit = (journal: TeachingJournal) => {
     setEditingJournal(journal);
@@ -111,7 +110,7 @@ export default function MobileTeachingJournalsPage() {
     try {
       await teachingJournalsService.delete(id);
       toast.success("Jurnal berhasil dihapus");
-      fetchMainData();
+      refetchJournals();
     } catch (err) {
       toast.error("Gagal menghapus jurnal");
     }
@@ -158,7 +157,7 @@ export default function MobileTeachingJournalsPage() {
       }
 
       handleCancel();
-      fetchMainData();
+      refetchJournals();
     } catch (err: any) {
       toast.error(err.message || "Gagal menyimpan jurnal");
     } finally {

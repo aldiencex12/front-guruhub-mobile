@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { attendanceService } from "@/services/attendance";
 import { schedulesService } from "@/services/schedules";
@@ -28,13 +29,63 @@ export default function MobileAttendancePage() {
   const [activeTab, setActiveTab] = useState<"sessions" | "daily" | "monthly">("sessions");
   const [isCreating, setIsCreating] = useState(false);
 
-  // Global Lookups
-  const [attendances, setAttendances] = useState<Attendance[]>([]);
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Query Lookups
+  const { data: rawAttendances = [], isLoading: loadingAttendances, refetch: refetchAttendances } = useQuery<Attendance[]>({ 
+    queryKey: ["attendances"],
+    queryFn: async () => {
+      const attList = await attendanceService.getAll().catch(() => []);
+      return Promise.all(
+        attList.map(async (att) => {
+          try {
+            return await attendanceService.getById(att.id);
+          } catch {
+            return att;
+          }
+        })
+      );
+    }
+  });
+
+  const { data: rawSchedules = [], isLoading: loadingSchedules } = useQuery<Schedule[]>({ 
+    queryKey: ["schedules"],
+    queryFn: () => schedulesService.getAll(),
+  });
+
+  const { data: classes = [], isLoading: loadingClasses } = useQuery<Class[]>({ 
+    queryKey: ["classes"],
+    queryFn: () => classesService.getAll(),
+  });
+
+  const { data: subjects = [], isLoading: loadingSubjects } = useQuery<Subject[]>({ 
+    queryKey: ["subjects"],
+    queryFn: () => subjectsService.getAll(),
+  });
+
+  const { data: teachers = [], isLoading: loadingTeachers } = useQuery<Teacher[]>({ 
+    queryKey: ["teachers"],
+    queryFn: () => teachersService.getAll(),
+  });
+
+  const schedules = useMemo(() => {
+    return rawSchedules.map((sched) => ({
+      ...sched,
+      class: classes.find((c) => c.id === sched.classId),
+      subject: subjects.find((sub) => sub.id === sched.subjectId),
+      teacher: teachers.find((t) => t.id === sched.teacherId),
+    }));
+  }, [rawSchedules, classes, subjects, teachers]);
+
+  const attendances = useMemo(() => {
+    return rawAttendances.map((att) => {
+      const sched = schedules.find((s) => s.id === att.scheduleId);
+      return {
+        ...att,
+        schedule: sched,
+      };
+    });
+  }, [rawAttendances, schedules]);
+
+  const loading = loadingAttendances || loadingSchedules || loadingClasses || loadingSubjects || loadingTeachers;
 
   // Create Form States
   const [scheduleId, setScheduleId] = useState<string>("");
@@ -59,72 +110,21 @@ export default function MobileAttendancePage() {
   const [monthlyRecapData, setMonthlyRecapData] = useState<any>(null);
   const [loadingMonthly, setLoadingMonthly] = useState(false);
 
-  // Load Main Data
-  const fetchMainData = async () => {
-    setLoading(true);
-    try {
-      const [attList, schedList, classList, subjectList, teacherList] = await Promise.all([
-        attendanceService.getAll().catch(() => []),
-        schedulesService.getAll().catch(() => []),
-        classesService.getAll().catch(() => []),
-        subjectsService.getAll().catch(() => []),
-        teachersService.getAll().catch(() => []),
-      ]);
-
-      const enrichedSchedulesList = schedList.map((sched) => ({
-        ...sched,
-        class: classList.find((c) => c.id === sched.classId),
-        subject: subjectList.find((sub) => sub.id === sched.subjectId),
-        teacher: teacherList.find((t) => t.id === sched.teacherId),
-      }));
-
-      // Fetch full attendance details in parallel to load the details array containing student statuses
-      const fullAttList = await Promise.all(
-        attList.map(async (att) => {
-          try {
-            return await attendanceService.getById(att.id);
-          } catch {
-            return att;
-          }
-        })
-      );
-
-      const enriched = fullAttList.map((att) => {
-        const sched = enrichedSchedulesList.find((s) => s.id === att.scheduleId);
-        return {
-          ...att,
-          schedule: sched,
-        };
-      });
-
-      setAttendances(enriched);
-      setSchedules(enrichedSchedulesList);
-      setClasses(classList);
-      setSubjects(subjectList);
-      setTeachers(teacherList);
-
-      if (classList.length > 0) {
-        setRecapClassId(String(classList[0].id));
-      }
-
-      // Direct URL redirection for schedule
-      const queryScheduleId = searchParams.get("scheduleId");
-      if (queryScheduleId) {
-        setScheduleId(queryScheduleId);
-        setIsCreating(true);
-      } else if (enrichedSchedulesList.length > 0) {
-        setScheduleId(String(enrichedSchedulesList[0].id));
-      }
-    } catch (err) {
-      toast.error("Gagal memuat data utama");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (classes.length > 0 && !recapClassId) {
+      setRecapClassId(String(classes[0].id));
     }
-  };
+  }, [classes, recapClassId]);
 
   useEffect(() => {
-    fetchMainData();
-  }, [searchParams]);
+    const queryScheduleId = searchParams.get("scheduleId");
+    if (queryScheduleId) {
+      setScheduleId(queryScheduleId);
+      setIsCreating(true);
+    } else if (schedules.length > 0 && !scheduleId) {
+      setScheduleId(String(schedules[0].id));
+    }
+  }, [searchParams, schedules, scheduleId]);
 
   // Load students for Create Form
   useEffect(() => {
@@ -280,7 +280,7 @@ export default function MobileAttendancePage() {
 
       toast.success("Absensi berhasil disimpan!");
       setIsCreating(false);
-      fetchMainData();
+      refetchAttendances();
     } catch (err: any) {
       toast.error(err.message || "Gagal menyimpan absensi");
     } finally {
