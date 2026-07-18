@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { assessmentsService } from "@/services/assessments";
 import { classesService } from "@/services/classes";
@@ -31,7 +32,8 @@ import {
   Calendar, 
   Award,
   ChevronRight,
-  BookOpen
+  BookOpen,
+  AlertTriangle
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn, formatDate, getAssessmentTypeLabel } from "@/lib/utils";
@@ -51,15 +53,46 @@ export default function MobileAssessmentsPage() {
 
   // Navigation State
   const [view, setView] = useState<"list" | "create" | "edit" | "scores">("list");
-  const [loading, setLoading] = useState(true);
 
-  // Data Lookup Lists
-  const [assessments, setAssessments] = useState<Assessment[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [categories, setCategories] = useState<AssessmentCategory[]>([]);
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
+  const { data: assessments = [], isLoading: loadingAssessments, refetch: refetchAssessments } = useQuery<Assessment[]>({ 
+    queryKey: ["assessments"],
+    queryFn: () => assessmentsService.getAll(),
+  });
+
+  const { data: classes = [], isLoading: loadingClasses } = useQuery<Class[]>({ 
+    queryKey: ["classes"],
+    queryFn: () => classesService.getAll(),
+  });
+
+  const { data: subjects = [], isLoading: loadingSubjects } = useQuery<Subject[]>({ 
+    queryKey: ["subjects"],
+    queryFn: () => subjectsService.getAll(),
+  });
+
+  const { data: categories = [], isLoading: loadingCategories } = useQuery<AssessmentCategory[]>({ 
+    queryKey: ["categories"],
+    queryFn: () => assessmentCategoriesService.getAll(),
+  });
+
+  const { data: teachers = [], isLoading: loadingTeachers } = useQuery<Teacher[]>({ 
+    queryKey: ["teachers"],
+    queryFn: () => teachersService.getAll(),
+  });
+
+  const { data: academicYears = [], isLoading: loadingAcademicYears } = useQuery({ 
+    queryKey: ["academicYears"],
+    queryFn: () => academicYearsService.getAll(),
+    select: (list) => (list || []).map((ay: any) => ({
+      id: ay.id,
+      name: ay.name || ay.year || "Tahun Ajaran",
+      semester: ay.semester || "Ganjil",
+      startDate: ay.startDate || "",
+      endDate: ay.endDate || "",
+      isActive: ay.isActive || false,
+    })),
+  });
+
+  const loading = loadingAssessments || loadingClasses || loadingSubjects || loadingCategories || loadingTeachers || loadingAcademicYears;
 
   // Selected Item / Input Mode States
   const [selectedAssessment, setSelectedAssessment] = useState<Assessment | null>(null);
@@ -83,65 +116,45 @@ export default function MobileAssessmentsPage() {
   const [formMaxScore, setFormMaxScore] = useState<number>(100);
   const [submittingForm, setSubmittingForm] = useState(false);
 
-  // Load Initial Lookups
-  const loadInitialData = async () => {
-    setLoading(true);
-    try {
-      const [assList, classList, subjectList, catList, teacherList, ayList] = await Promise.all([
-        assessmentsService.getAll().catch(() => []),
-        classesService.getAll().catch(() => []),
-        subjectsService.getAll().catch(() => []),
-        assessmentCategoriesService.getAll().catch(() => []),
-        teachersService.getAll().catch(() => []),
-        academicYearsService.getAll().catch(() => []),
-      ]);
+  useEffect(() => {
+    if (classes.length > 0 && !formClassId) {
+      setFormClassId(String(classes[0].id));
+    }
+  }, [classes, formClassId]);
 
-      setAssessments(assList);
-      setClasses(classList);
-      setSubjects(subjectList);
-      setCategories(catList);
-      setTeachers(teacherList);
-      
-      // Handle different AcademicYear schema structures
-      const formattedAY = (ayList || []).map((ay: any) => ({
-        id: ay.id,
-        name: ay.name || ay.year || "Tahun Ajaran",
-        semester: ay.semester || "Ganjil",
-        startDate: ay.startDate || "",
-        endDate: ay.endDate || "",
-        isActive: ay.isActive || false,
-      }));
-      setAcademicYears(formattedAY);
+  useEffect(() => {
+    if (subjects.length > 0 && !formSubjectId) {
+      setFormSubjectId(String(subjects[0].id));
+    }
+  }, [subjects, formSubjectId]);
 
-      // Auto-set default values for form
-      if (classList.length > 0) setFormClassId(String(classList[0].id));
-      if (subjectList.length > 0) setFormSubjectId(String(subjectList[0].id));
-      if (catList.length > 0) setFormCategoryId(String(catList[0].id));
-      
-      const activeAY = formattedAY.find((ay: any) => ay.isActive) || formattedAY[0];
+  useEffect(() => {
+    if (categories.length > 0 && !formCategoryId) {
+      setFormCategoryId(String(categories[0].id));
+    }
+  }, [categories, formCategoryId]);
+
+  useEffect(() => {
+    if (academicYears.length > 0 && !formAcademicYearId) {
+      const activeAY = academicYears.find((ay: any) => ay.isActive) || academicYears[0];
       if (activeAY) setFormAcademicYearId(String(activeAY.id));
+    }
+  }, [academicYears, formAcademicYearId]);
 
-      // Set current user as default teacher if matches
-      if (currentUser?.email && teacherList.length > 0) {
-        const matched = teacherList.find(t => t.email?.toLowerCase() === currentUser.email.toLowerCase());
+  useEffect(() => {
+    if (teachers.length > 0 && !formTeacherId) {
+      if (currentUser?.email) {
+        const matched = teachers.find(t => t.email?.toLowerCase() === currentUser.email.toLowerCase());
         if (matched) {
           setFormTeacherId(String(matched.id));
         } else {
-          setFormTeacherId(String(teacherList[0].id));
+          setFormTeacherId(String(teachers[0].id));
         }
-      } else if (teacherList.length > 0) {
-        setFormTeacherId(String(teacherList[0].id));
+      } else {
+        setFormTeacherId(String(teachers[0].id));
       }
-    } catch (err) {
-      toast.error("Gagal memuat data referensi");
-    } finally {
-      setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadInitialData();
-  }, [currentUser]);
+  }, [teachers, currentUser, formTeacherId]);
 
   // Load scores for selected assessment
   const loadScoresData = async (assessment: Assessment) => {
@@ -190,7 +203,7 @@ export default function MobileAssessmentsPage() {
     if (classes.length > 0) setFormClassId(String(classes[0].id));
     if (subjects.length > 0) setFormSubjectId(String(subjects[0].id));
     if (categories.length > 0) setFormCategoryId(String(categories[0].id));
-    const activeAY = academicYears.find(ay => ay.isActive) || academicYears[0];
+    const activeAY = academicYears.find((ay: any) => ay.isActive) || academicYears[0];
     if (activeAY) setFormAcademicYearId(String(activeAY.id));
   };
 
@@ -239,9 +252,7 @@ export default function MobileAssessmentsPage() {
         toast.success("Penilaian berhasil diperbarui!");
       }
       setView("list");
-      // Reload assessments list
-      const updated = await assessmentsService.getAll().catch(() => []);
-      setAssessments(updated);
+      refetchAssessments();
     } catch (err: any) {
       toast.error(err.message || "Gagal menyimpan penilaian");
     } finally {
@@ -257,7 +268,7 @@ export default function MobileAssessmentsPage() {
     try {
       await assessmentsService.delete(id);
       toast.success("Penilaian berhasil dihapus");
-      setAssessments(prev => prev.filter(a => a.id !== id));
+      refetchAssessments();
     } catch (err: any) {
       toast.error(err.message || "Gagal menghapus penilaian");
     }
@@ -316,9 +327,7 @@ export default function MobileAssessmentsPage() {
       await assessmentsService.saveScores(selectedAssessment.id, payload);
       toast.success("Nilai siswa berhasil disimpan!");
       setView("list");
-      // Reload assessments list to show update status
-      const updated = await assessmentsService.getAll().catch(() => []);
-      setAssessments(updated);
+      refetchAssessments();
     } catch (err: any) {
       toast.error(err.message || "Gagal menyimpan nilai");
     } finally {
@@ -331,6 +340,10 @@ export default function MobileAssessmentsPage() {
     if (filterClassId !== "ALL" && String(a.classId) !== filterClassId) return false;
     return true;
   });
+
+  const hasBelowKkm = Object.values(scoresData).some(
+    data => data.score !== "" && Number(data.score) < 75
+  );
 
   if (loading) {
     return (
@@ -441,6 +454,12 @@ export default function MobileAssessmentsPage() {
                           <span className="bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-450 px-2 py-0.5 rounded text-[8px] font-mono">
                             Maks Skor: {a.maxScore}
                           </span>
+                          {a.scores?.some(s => s.score !== null && s.score !== undefined && s.score < 75) && (
+                            <span className="bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400 px-2 py-0.5 rounded text-[8px] font-bold flex items-center gap-1 border border-rose-100 dark:border-rose-900/20">
+                              <AlertTriangle className="h-3 w-3 text-rose-500 animate-pulse" />
+                              Nilai &lt; KKM (75)
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -602,7 +621,7 @@ export default function MobileAssessmentsPage() {
                   onChange={(e) => setFormAcademicYearId(e.target.value)}
                   className="w-full px-3 py-2 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900 dark:text-white"
                 >
-                  {academicYears.map((ay) => (
+                  {academicYears.map((ay: any) => (
                     <option key={ay.id} value={ay.id}>{ay.name} ({ay.semester})</option>
                   ))}
                 </select>
@@ -631,7 +650,6 @@ export default function MobileAssessmentsPage() {
       {/* VIEW: INPUT STUDENT SCORES */}
       {view === "scores" && selectedAssessment && (
         <form onSubmit={handleSaveScores} className="space-y-4">
-          {/* Info Card */}
           <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm space-y-3">
             <div>
               <span className="text-[9px] uppercase font-bold text-gray-400 tracking-wider bg-gray-55 dark:bg-gray-850 px-2 py-0.5 rounded">
@@ -660,6 +678,13 @@ export default function MobileAssessmentsPage() {
               ))}
             </div>
           </div>
+
+          {hasBelowKkm && (
+            <div className="bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/30 text-rose-700 dark:text-rose-400 px-3 py-2.5 rounded-xl text-[10px] font-bold flex items-center gap-1.5 shadow-sm">
+              <AlertTriangle className="h-4 w-4 text-rose-500 flex-shrink-0 animate-pulse" />
+              <span>Perhatian: Terdapat siswa dengan nilai di bawah KKM (75).</span>
+            </div>
+          )}
 
           {/* Student list */}
           <div className="space-y-3">
@@ -735,7 +760,10 @@ export default function MobileAssessmentsPage() {
                             }
                           }
                         }}
-                        className="col-span-2 px-3 py-1.5 text-xs bg-gray-50 dark:bg-gray-850 border border-gray-300 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900 dark:text-white font-bold text-right"
+                        className={cn(
+                          "col-span-2 px-3 py-1.5 text-xs bg-gray-50 dark:bg-gray-850 border border-gray-300 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900 dark:text-white font-bold text-right",
+                          currentScore !== "" && Number(currentScore) < 75 && "border-rose-300 dark:border-rose-800/80 bg-rose-50/30 dark:bg-rose-950/10 text-rose-600 dark:text-rose-455"
+                        )}
                       />
                     </div>
 

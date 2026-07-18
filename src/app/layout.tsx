@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Providers } from "@/providers/Providers";
 import RegisterSW from "@/components/RegisterSW";
 
 const geistSans = Geist({
@@ -40,7 +41,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
         <RegisterSW />
-        {children}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

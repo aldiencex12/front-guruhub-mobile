@@ -116,7 +116,7 @@ export default function MobileDashboard() {
         </span>
         <h2 className="text-xl font-black mt-3 tracking-tight">Halo, {greetingName}!</h2>
         <p className="text-xs text-indigo-100 mt-1 leading-relaxed">
-          Selamat bekerja. Hari ini adalah <span className="font-semibold text-white">{currentDateStr}</span>.
+          Selamat mengajar. Hari ini adalah <span className="font-semibold text-white">{currentDateStr}</span>.
         </p>
 
         {/* Premium stats row */}
@@ -170,7 +170,7 @@ export default function MobileDashboard() {
             >
               <div className="flex gap-3">
                 <div className={`p-2.5 rounded-xl shrink-0 mt-0.5 ${
-                  task.type === "attendance" 
+                  task.type.toLowerCase() === "attendance" 
                     ? "bg-rose-50 text-rose-500 dark:bg-rose-950/20 dark:text-rose-400" 
                     : "bg-amber-50 text-amber-500 dark:bg-amber-950/20 dark:text-amber-400"
                 }`}>
@@ -178,13 +178,13 @@ export default function MobileDashboard() {
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-gray-900 dark:text-white">
-                    {task.type === "attendance" ? "Absensi Belum Diisi" : "Jurnal Belum Diisi"}
+                    {task.type.toLowerCase() === "attendance" ? "Absensi Belum Diisi" : "Jurnal Belum Diisi"}
                   </h4>
                   <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
                     Kelas {task.className} • Mapel {task.subjectName}
                   </p>
                   <span className={`inline-block text-[9px] px-1.5 py-0.5 rounded mt-2 font-medium ${
-                    task.type === "attendance"
+                    task.type.toLowerCase() === "attendance"
                       ? "text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30"
                       : "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30"
                   }`}>
@@ -194,7 +194,7 @@ export default function MobileDashboard() {
               </div>
 
               <Link
-                href={task.type === "attendance" ? "/attendance" : "/teaching-journals"}
+                href={task.type.toLowerCase() === "attendance" ? `/attendance?scheduleId=${task.scheduleId}` : `/teaching-journals?scheduleId=${task.scheduleId}`}
                 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:hover:bg-indigo-950 px-3.5 py-2 rounded-xl transition-all active:scale-95 border border-indigo-100/50 dark:border-indigo-900/30 shrink-0"
               >
                 Isi

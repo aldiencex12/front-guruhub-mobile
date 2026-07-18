@@ -5,11 +5,11 @@ const getApiUrl = () => {
     return process.env.NEXT_PUBLIC_API_URL;
   }
   if (typeof window !== "undefined") {
-    // If accessed via LAN IP (e.g. 192.168.1.96:3001), route API calls to 192.168.1.96:3000
+    // If accessed via LAN IP (e.g. 192.168.1.96:3001), route API calls to 192.168.1.96:8000
     const hostname = window.location.hostname;
-    return `http://${hostname}:3000`;
+    return `http://${hostname}:8000`;
   }
-  return "http://localhost:3000";
+  return "http://localhost:8000";
 };
 
 export const BASE_URL = getApiUrl();
