@@ -110,6 +110,7 @@ export default function MobileTeachingJournalsPage() {
     try {
       await teachingJournalsService.delete(id);
       toast.success("Jurnal berhasil dihapus");
+      alert("Jurnal berhasil dihapus!");
       refetchJournals();
     } catch (err) {
       toast.error("Gagal menghapus jurnal");
@@ -151,9 +152,11 @@ export default function MobileTeachingJournalsPage() {
       if (editingJournal) {
         await teachingJournalsService.update(editingJournal.id, payload);
         toast.success("Jurnal berhasil diperbarui!");
+        alert("Jurnal berhasil diperbarui!");
       } else {
         await teachingJournalsService.create(payload);
         toast.success("Jurnal baru berhasil disimpan!");
+        alert("Jurnal baru berhasil disimpan!");
       }
 
       handleCancel();

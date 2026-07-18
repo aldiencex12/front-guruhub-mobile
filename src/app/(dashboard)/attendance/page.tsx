@@ -279,6 +279,7 @@ export default function MobileAttendancePage() {
       });
 
       toast.success("Absensi berhasil disimpan!");
+      alert("Absensi berhasil disimpan!");
       setIsCreating(false);
       refetchAttendances();
     } catch (err: any) {

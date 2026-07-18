@@ -247,9 +247,11 @@ export default function MobileAssessmentsPage() {
       if (view === "create") {
         await assessmentsService.create(payload);
         toast.success("Penilaian berhasil ditambahkan!");
+        alert("Penilaian berhasil ditambahkan!");
       } else if (view === "edit" && selectedAssessment) {
         await assessmentsService.update(selectedAssessment.id, payload);
         toast.success("Penilaian berhasil diperbarui!");
+        alert("Penilaian berhasil diperbarui!");
       }
       setView("list");
       refetchAssessments();
@@ -268,6 +270,7 @@ export default function MobileAssessmentsPage() {
     try {
       await assessmentsService.delete(id);
       toast.success("Penilaian berhasil dihapus");
+      alert("Penilaian berhasil dihapus!");
       refetchAssessments();
     } catch (err: any) {
       toast.error(err.message || "Gagal menghapus penilaian");
@@ -326,6 +329,7 @@ export default function MobileAssessmentsPage() {
     try {
       await assessmentsService.saveScores(selectedAssessment.id, payload);
       toast.success("Nilai siswa berhasil disimpan!");
+      alert("Nilai siswa berhasil disimpan!");
       setView("list");
       refetchAssessments();
     } catch (err: any) {
