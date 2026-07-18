@@ -1,3 +1,4 @@
+import { showAlert } from "@/utils/alert";
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
@@ -279,7 +280,7 @@ export default function MobileAttendancePage() {
       });
 
       toast.success("Absensi berhasil disimpan!");
-      alert("Absensi berhasil disimpan!");
+      showAlert("Berhasil", "Absensi berhasil disimpan!", "success");
       setIsCreating(false);
       refetchAttendances();
     } catch (err: any) {

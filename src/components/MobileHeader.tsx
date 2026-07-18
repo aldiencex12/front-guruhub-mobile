@@ -19,17 +19,19 @@ export default function MobileHeader() {
     <header className="sticky top-0 left-0 right-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
       <div className="max-w-md mx-auto flex items-center justify-between h-14 px-4">
         {/* Left - School Logo & Info */}
-        <div className="flex items-center gap-2">
-          <img
-            src="/logo-hangtuah.png"
-            alt="School Logo"
-            className="h-8 w-8 object-contain rounded-md"
-          />
+        <div className="flex items-center gap-2.5">
+          <div className="p-1 bg-gray-50 dark:bg-gray-800 border border-gray-150 dark:border-gray-700/80 rounded-lg shadow-sm">
+            <img
+              src="/logo-hangtuah.png"
+              alt="School Logo"
+              className="h-7 w-7 object-contain"
+            />
+          </div>
           <div className="flex flex-col">
-            <span className="text-xs font-bold text-gray-900 dark:text-white leading-tight">
+            <span className="text-xs font-black text-gray-900 dark:text-white leading-tight tracking-tight">
               SMP Hang Tuah 5
             </span>
-            <span className="text-[10px] text-gray-500 dark:text-gray-400 leading-none">
+            <span className="text-[9px] uppercase font-bold text-indigo-600 dark:text-indigo-400 leading-none mt-0.5 tracking-wider">
               GuruHub Mobile
             </span>
           </div>

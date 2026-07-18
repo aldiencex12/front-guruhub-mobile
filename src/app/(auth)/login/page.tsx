@@ -103,13 +103,17 @@ export default function LoginPage() {
       <div className="w-full max-w-md mx-auto bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 p-6">
         {/* App Logo & Header */}
         <div className="flex flex-col items-center mb-8">
-          <img
-            src="/logo-hangtuah.png"
-            alt="School Logo"
-            className="h-16 w-16 object-contain mb-3"
-          />
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">GuruHub Mobile</h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <div className="relative p-3 bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100/50 dark:border-indigo-900/30 rounded-2xl shadow-sm mb-3">
+            <img
+              src="/logo-hangtuah.png"
+              alt="School Logo"
+              className="h-14 w-14 object-contain filter drop-shadow-[0_2px_8px_rgba(79,70,229,0.15)]"
+            />
+          </div>
+          <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-indigo-400 dark:from-indigo-400 dark:to-indigo-300 tracking-tight">
+            GuruHub Mobile
+          </h2>
+          <p className="text-[10px] uppercase font-extrabold tracking-wider text-gray-400 dark:text-gray-500 mt-1.5">
             SMP Hang Tuah 5 Sidoarjo
           </p>
         </div>

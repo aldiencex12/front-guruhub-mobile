@@ -1,3 +1,4 @@
+import { showAlert } from "@/utils/alert";
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
@@ -110,7 +111,7 @@ export default function MobileTeachingJournalsPage() {
     try {
       await teachingJournalsService.delete(id);
       toast.success("Jurnal berhasil dihapus");
-      alert("Jurnal berhasil dihapus!");
+      showAlert("Berhasil", "Jurnal berhasil dihapus!", "success");
       refetchJournals();
     } catch (err) {
       toast.error("Gagal menghapus jurnal");
@@ -152,11 +153,11 @@ export default function MobileTeachingJournalsPage() {
       if (editingJournal) {
         await teachingJournalsService.update(editingJournal.id, payload);
         toast.success("Jurnal berhasil diperbarui!");
-        alert("Jurnal berhasil diperbarui!");
+        showAlert("Berhasil", "Jurnal berhasil diperbarui!", "success");
       } else {
         await teachingJournalsService.create(payload);
         toast.success("Jurnal baru berhasil disimpan!");
-        alert("Jurnal baru berhasil disimpan!");
+        showAlert("Berhasil", "Jurnal baru berhasil disimpan!", "success");
       }
 
       handleCancel();
