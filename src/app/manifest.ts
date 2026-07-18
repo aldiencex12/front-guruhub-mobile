@@ -13,7 +13,13 @@ export default function manifest(): MetadataRoute.Manifest {
     icons: [
       {
         src: "/logo-hangtuah.png",
-        sizes: "any",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "maskable",
+      },
+      {
+        src: "/logo-hangtuah.png",
+        sizes: "512x512",
         type: "image/png",
         purpose: "maskable",
       },
