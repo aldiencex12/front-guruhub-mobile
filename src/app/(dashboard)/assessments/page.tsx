@@ -1,5 +1,5 @@
-import { showAlert } from "@/utils/alert";
 "use client";
+import { showAlert } from "@/utils/alert";
 
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
