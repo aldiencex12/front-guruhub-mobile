@@ -47,6 +47,26 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // HTML page navigations: Network-first with Cache fallback
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request);
+        })
+    );
+    return;
+  }
+
   // Assets and pages: Cache-first
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
