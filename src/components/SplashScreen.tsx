@@ -32,35 +32,35 @@ export default function SplashScreen() {
   if (!visible) return null;
 
   return (
-    <div className={`fixed inset-0 z-[9999] bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-950 flex flex-col items-center justify-center transition-opacity duration-300 ease-out ${
+    <div className={`fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center transition-opacity duration-300 ease-out ${
       fadeOut ? "opacity-0 pointer-events-none" : "opacity-100"
     }`}>
       <div className="flex flex-col items-center text-center px-4 animate-in fade-in zoom-in-95 duration-500">
-        {/* Glow background effect */}
-        <div className="absolute h-56 w-56 rounded-full bg-indigo-500/10 blur-[80px]" />
+        {/* Soft glow background effect */}
+        <div className="absolute h-64 w-64 rounded-full bg-indigo-50/60 blur-[80px]" />
 
         {/* Logo Container */}
-        <div className="relative bg-white/5 backdrop-blur-md p-5 rounded-[2rem] border border-white/10 shadow-2xl mb-6 transform hover:scale-105 transition-transform duration-300">
+        <div className="relative bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-xl mb-6 transform hover:scale-105 transition-transform duration-300">
           <img 
             src="/logo-hangtuah.png" 
             alt="Yayasan Hang Tuah" 
-            className="h-24 w-24 object-contain filter drop-shadow-[0_4px_12px_rgba(255,255,255,0.1)]"
+            className="h-28 w-28 object-contain filter drop-shadow-[0_4px_12px_rgba(79,70,229,0.08)]"
           />
         </div>
         
         {/* App Title */}
-        <h1 className="relative text-white text-3xl font-extrabold tracking-tight bg-clip-text bg-gradient-to-r from-white via-indigo-100 to-indigo-300">
+        <h1 className="relative text-3xl font-black tracking-tight text-gray-900">
           GuruHub Mobile
         </h1>
-        <p className="text-xs font-semibold text-indigo-300/80 mt-1.5 uppercase tracking-wider">
+        <p className="text-xs font-bold text-indigo-600/80 mt-1.5 uppercase tracking-wider">
           SMP Hang Tuah 5 Sidoarjo
         </p>
 
         {/* Custom Progress bar / pulse loader */}
         <div className="mt-8 flex gap-2 justify-center">
-          <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:-0.3s]" />
-          <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:-0.15s]" />
-          <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-bounce" />
+          <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 animate-bounce [animation-delay:-0.3s]" />
+          <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 animate-bounce [animation-delay:-0.15s]" />
+          <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 animate-bounce" />
         </div>
       </div>
     </div>
