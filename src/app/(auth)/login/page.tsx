@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Download, Eye, EyeOff, Lock, Mail, Smartphone } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { authService } from "@/services/auth";
 
@@ -21,6 +21,49 @@ export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
+
+  // PWA Install State
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallBtn, setShowInstallBtn] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBtn(true);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+    // Detect standalone mode
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+
+    // Detect iOS Device
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
+
+    if (isIOSDevice && !isStandalone) {
+      setIsIOS(true);
+    }
+
+    if (isStandalone) {
+      setShowInstallBtn(false);
+    }
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to the install prompt: ${outcome}`);
+    setDeferredPrompt(null);
+    setShowInstallBtn(false);
+  };
 
   const {
     register,
@@ -136,6 +179,33 @@ export default function LoginPage() {
             )}
           </button>
         </form>
+
+        {/* Custom PWA Install Shortcut for Android/Chrome/Desktop */}
+        {showInstallBtn && (
+          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-800">
+            <button
+              type="button"
+              onClick={handleInstallClick}
+              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-sm shadow-emerald-500/20"
+            >
+              <Download className="h-3.5 w-3.5" /> Pasang Aplikasi GuruHub PWA
+            </button>
+          </div>
+        )}
+
+        {/* Custom PWA Instructions for iOS/Safari */}
+        {isIOS && (
+          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-800">
+            <div className="bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-xl p-3.5 text-[11px] text-indigo-800 dark:text-indigo-300">
+              <p className="font-bold mb-1 flex items-center justify-center gap-1.5 text-xs text-indigo-900 dark:text-indigo-200">
+                <Smartphone className="h-3.5 w-3.5" /> Pasang di iPhone/iPad
+              </p>
+              <p className="leading-relaxed">
+                Ketuk ikon <strong className="font-semibold text-indigo-900 dark:text-indigo-200">Share</strong> (panah kotak) di Safari, lalu pilih <strong className="font-semibold text-indigo-900 dark:text-indigo-200">"Tambahkan ke Layar Utama"</strong>.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
