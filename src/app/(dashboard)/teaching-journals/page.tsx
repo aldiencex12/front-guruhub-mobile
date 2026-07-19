@@ -8,8 +8,7 @@ import { teachingJournalsService } from "@/services/teaching-journals";
 import { schedulesService } from "@/services/schedules";
 import { classesService } from "@/services/classes";
 import { subjectsService } from "@/services/subjects";
-import type { TeachingJournal, Schedule, Class, Subject } from "@/types";
-import { BookOpen, Plus, Calendar, ArrowLeft, Check, Info, Trash2, Edit2, Printer, FileText, Eye } from "lucide-react";
+import { BookOpen, Plus, Calendar, ArrowLeft, Check, Info, Trash2, Edit2, Printer, FileText, Eye, X } from "lucide-react";
 import { toast } from "sonner";
 import { PrintHeader } from "@/components/PrintHeader";
 import { cn, formatDate } from "@/lib/utils";
@@ -209,12 +208,13 @@ export default function MobileTeachingJournalsPage() {
   }
 
   return (
-    <div className="space-y-      {/* HEADER SECTION */}
+    <div className="space-y-4">
+      {/* HEADER SECTION */}
       <div className="flex justify-between items-center bg-white dark:bg-gray-900 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm no-print">
         <div className="flex items-center gap-2">
-          {isFormOpen || detailJournal ? (
+          {isFormOpen ? (
             <button
-              onClick={detailJournal ? () => setDetailJournal(null) : handleCancel}
+              onClick={handleCancel}
               className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400"
             >
               <ArrowLeft className="h-5 w-5" />
@@ -223,14 +223,12 @@ export default function MobileTeachingJournalsPage() {
             <BookOpen className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
           )}
           <span className="text-sm font-bold text-gray-900 dark:text-white">
-            {isFormOpen 
-              ? (editingJournal ? "Edit Jurnal Mengajar" : "Input Jurnal") 
-              : (detailJournal ? "Detail Jurnal Mengajar" : "Jurnal Mengajar")}
+            {isFormOpen ? (editingJournal ? "Edit Jurnal Mengajar" : "Input Jurnal") : "Jurnal Mengajar"}
           </span>
         </div>
 
         <div className="flex gap-2">
-          {!isFormOpen && !detailJournal && activeTab !== "journals" && (
+          {!isFormOpen && activeTab !== "journals" && (
             <button
               onClick={handlePrint}
               className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-indigo-600 transition-colors"
@@ -239,7 +237,7 @@ export default function MobileTeachingJournalsPage() {
               <Printer className="h-4 w-4" />
             </button>
           )}
-          {!isFormOpen && !detailJournal && (
+          {!isFormOpen && (
             <button
               onClick={() => setIsFormOpen(true)}
               className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-sm"
@@ -252,7 +250,7 @@ export default function MobileTeachingJournalsPage() {
       </div>
 
       {/* TABS SELECTOR (no-print) */}
-      {!isFormOpen && !detailJournal && (
+      {!isFormOpen && (
         <div className="flex bg-white dark:bg-gray-900 p-1 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm no-print">
           {(["journals", "daily", "monthly"] as const).map((tab) => (
             <button
@@ -270,10 +268,9 @@ export default function MobileTeachingJournalsPage() {
           ))}
         </div>
       )}
- )}
 
       {/* FILTER PANEL FOR RECAPS */}
-      {!isFormOpen && !detailJournal && activeTab !== "journals" && (
+      {!isFormOpen && activeTab !== "journals" && (
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm grid grid-cols-2 gap-3 no-print">
           <div className="space-y-1">
             <label className="text-[9px] uppercase font-bold text-gray-400">Kelas</label>
@@ -525,22 +522,91 @@ export default function MobileTeachingJournalsPage() {
         </div>
       )}
 
-      {/* JOURNAL DETAIL VIEW */}
+      {/* JOURNAL DETAIL DIALOG (CENTER POPUP MODAL) */}
       {!isFormOpen && detailJournal && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 shadow-sm space-y-4 text-xs no-print">
-          <div className="flex justify-between items-start pb-3 border-b border-gray-100 dark:border-gray-800">
-            <div>
-              <span className="text-[10px] uppercase font-bold text-gray-400 block">Jadwal</span>
-              <span className="text-gray-950 dark:text-white font-bold text-sm">
-                Kelas {detailJournal.schedule?.class?.name || "-"} • Mapel {detailJournal.schedule?.subject?.name || "-"}
-              </span>
-              <div className="flex items-center gap-1.5 text-[10px] text-gray-500 mt-1">
-                <Calendar className="h-3.5 w-3.5 text-indigo-500" />
-                {formatDate(detailJournal.journalDate)}
-              </div>
-            </div>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300 animate-in fade-in no-print">
+          {/* Modal Card */}
+          <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-2xl border border-gray-100 dark:border-gray-800 shadow-2xl overflow-hidden relative flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
             
-            <div className="flex gap-2">
+            {/* Header */}
+            <div className="flex justify-between items-center px-4 py-3 bg-gray-50 dark:bg-gray-850 border-b border-gray-150 dark:border-gray-800">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
+                <span className="text-[11px] font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">
+                  Detail Jurnal
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDetailJournal(null)}
+                className="p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+                title="Tutup"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="p-4 space-y-4 overflow-y-auto text-xs scrollbar-thin">
+              {/* Jadwal Info Card */}
+              <div className="bg-indigo-50/40 dark:bg-indigo-950/20 rounded-xl p-3 border border-indigo-100/30 dark:border-indigo-900/20">
+                <span className="text-[9px] uppercase font-bold text-indigo-600/80 dark:text-indigo-400 block">Jadwal Kelas</span>
+                <span className="text-gray-900 dark:text-white font-bold text-sm block mt-0.5">
+                  Kelas {detailJournal.schedule?.class?.name || "-"} • Mapel {detailJournal.schedule?.subject?.name || "-"}
+                </span>
+                <div className="flex items-center gap-1.5 text-[10px] text-gray-500 dark:text-gray-400 mt-2 font-medium">
+                  <Calendar className="h-3.5 w-3.5 text-indigo-500" />
+                  {formatDate(detailJournal.journalDate)}
+                </div>
+              </div>
+
+              {/* Topic */}
+              <div className="space-y-1">
+                <span className="text-[9px] uppercase font-bold text-gray-400 block">Topik / Materi</span>
+                <p className="text-gray-900 dark:text-white font-bold text-sm bg-gray-50 dark:bg-gray-850 p-2.5 rounded-lg border border-gray-100 dark:border-gray-800">
+                  {detailJournal.topic}
+                </p>
+              </div>
+
+              {/* Learning Objectives */}
+              <div className="space-y-1">
+                <span className="text-[9px] uppercase font-bold text-gray-400 block">Tujuan Pembelajaran</span>
+                <div className="bg-gray-50 dark:bg-gray-850 p-2.5 rounded-lg border border-gray-100 dark:border-gray-800 text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                  {detailJournal.learningObjectives}
+                </div>
+              </div>
+
+              {/* Teaching Method */}
+              <div className="space-y-1">
+                <span className="text-[9px] uppercase font-bold text-gray-400 block">Metode Pembelajaran</span>
+                <div className="inline-block bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 px-2.5 py-1 rounded-md font-semibold text-[10px]">
+                  {detailJournal.teachingMethod}
+                </div>
+              </div>
+
+              {/* Reflection */}
+              {detailJournal.reflection && (
+                <div className="space-y-1">
+                  <span className="text-[9px] uppercase font-bold text-gray-400 block">Refleksi</span>
+                  <div className="bg-emerald-50/40 dark:bg-emerald-950/10 p-2.5 rounded-lg border border-emerald-100/30 dark:border-emerald-900/20 text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                    {detailJournal.reflection}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              {detailJournal.notes && (
+                <div className="space-y-1">
+                  <span className="text-[9px] uppercase font-bold text-gray-400 block">Catatan</span>
+                  <div className="bg-amber-50/40 dark:bg-amber-950/10 p-2.5 rounded-lg border border-amber-100/30 dark:border-amber-900/20 text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                    {detailJournal.notes}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer Actions */}
+            <div className="px-4 py-3 bg-gray-50 dark:bg-gray-850 border-t border-gray-150 dark:border-gray-800 flex gap-2">
               <button
                 type="button"
                 onClick={() => {
@@ -548,49 +614,27 @@ export default function MobileTeachingJournalsPage() {
                   setDetailJournal(null);
                   handleEdit(j);
                 }}
-                className="flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 px-2.5 py-1.5 rounded-lg font-bold"
+                className="flex-1 flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white py-2 rounded-xl text-xs font-bold transition-all shadow-sm"
               >
                 <Edit2 className="h-3.5 w-3.5" />
-                Edit
+                Edit Jurnal
+              </button>
+              <button
+                type="button"
+                onClick={() => setDetailJournal(null)}
+                className="flex-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-300 py-2 rounded-xl text-xs font-bold transition-colors"
+              >
+                Tutup
               </button>
             </div>
-          </div>
 
-          <div className="space-y-3">
-            <div>
-              <span className="text-[9px] uppercase font-bold text-gray-400 block">Topik / Materi</span>
-              <p className="text-gray-950 dark:text-white font-semibold text-sm mt-0.5">{detailJournal.topic}</p>
-            </div>
-
-            <div>
-              <span className="text-[9px] uppercase font-bold text-gray-400 block">Tujuan Pembelajaran</span>
-              <p className="text-gray-700 dark:text-gray-300 mt-0.5 whitespace-pre-wrap">{detailJournal.learningObjectives}</p>
-            </div>
-
-            <div>
-              <span className="text-[9px] uppercase font-bold text-gray-400 block">Metode Pembelajaran</span>
-              <p className="text-gray-700 dark:text-gray-300 mt-0.5">{detailJournal.teachingMethod}</p>
-            </div>
-
-            {detailJournal.reflection && (
-              <div>
-                <span className="text-[9px] uppercase font-bold text-gray-400 block">Refleksi</span>
-                <p className="text-gray-700 dark:text-gray-300 mt-0.5 whitespace-pre-wrap">{detailJournal.reflection}</p>
-              </div>
-            )}
-
-            {detailJournal.notes && (
-              <div>
-                <span className="text-[9px] uppercase font-bold text-gray-400 block">Catatan</span>
-                <p className="text-gray-700 dark:text-gray-300 mt-0.5 whitespace-pre-wrap">{detailJournal.notes}</p>
-              </div>
-            )}
           </div>
         </div>
       )}
 
+
       {/* DAILY RECAP VIEW */}
-      {!isFormOpen && !detailJournal && activeTab === "daily" && (
+      {!isFormOpen && activeTab === "daily" && (
         <div className="space-y-4">
           <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm print:p-0 print:border-none print:shadow-none">
 
@@ -657,7 +701,7 @@ export default function MobileTeachingJournalsPage() {
       )}
 
       {/* MONTHLY RECAP VIEW */}
-      {!isFormOpen && !detailJournal && activeTab === "monthly" && (
+      {!isFormOpen && activeTab === "monthly" && (
         <div className="space-y-4">
           <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm print:p-0 print:border-none print:shadow-none">
             
