@@ -493,7 +493,7 @@ export default function MobileTeachingJournalsPage() {
                       {journal.topic}
                     </h4>
                     <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
-                      Kelas {journal.schedule?.class?.name} • Mapel {journal.schedule?.subject?.name}
+                      Kelas {journal.schedule?.class?.name} • Mapel {journal.schedule?.subject?.name} ({journal.schedule?.startTime ? formatTime(journal.schedule.startTime) : "—"} - {journal.schedule?.endTime ? formatTime(journal.schedule.endTime) : "—"})
                     </p>
                     <div className="flex items-center gap-1 text-[9px] text-gray-400 mt-2 font-medium">
                       <Calendar className="h-3.5 w-3.5 text-indigo-500" />
@@ -584,7 +584,7 @@ export default function MobileTeachingJournalsPage() {
               <div className="bg-indigo-50/40 dark:bg-indigo-950/20 rounded-xl p-3 border border-indigo-100/30 dark:border-indigo-900/20">
                 <span className="text-[9px] uppercase font-bold text-indigo-600/80 dark:text-indigo-400 block">Jadwal Kelas</span>
                 <span className="text-gray-900 dark:text-white font-bold text-sm block mt-0.5">
-                  Kelas {detailJournal.schedule?.class?.name || "-"} • Mapel {detailJournal.schedule?.subject?.name || "-"}
+                  Kelas {detailJournal.schedule?.class?.name || "-"} • Mapel {detailJournal.schedule?.subject?.name || "-"} ({detailJournal.schedule?.startTime ? formatTime(detailJournal.schedule.startTime) : "—"} - {detailJournal.schedule?.endTime ? formatTime(detailJournal.schedule.endTime) : "—"})
                 </span>
                 <div className="flex items-center gap-1.5 text-[10px] text-gray-500 dark:text-gray-400 mt-2 font-medium">
                   <Calendar className="h-3.5 w-3.5 text-indigo-500" />
