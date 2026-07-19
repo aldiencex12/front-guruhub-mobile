@@ -8,6 +8,7 @@ import { teachingJournalsService } from "@/services/teaching-journals";
 import { schedulesService } from "@/services/schedules";
 import { classesService } from "@/services/classes";
 import { subjectsService } from "@/services/subjects";
+import type { TeachingJournal, Schedule, Class, Subject } from "@/types";
 import { BookOpen, Plus, Calendar, ArrowLeft, Check, Info, Trash2, Edit2, Printer, FileText, Eye, X } from "lucide-react";
 import { toast } from "sonner";
 import { PrintHeader } from "@/components/PrintHeader";
