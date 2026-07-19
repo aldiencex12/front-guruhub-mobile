@@ -11,6 +11,7 @@ import { teachersService } from "@/services/teachers";
 import type { Schedule, DashboardSummary } from "@/types";
 import { ClipboardCheck, BookOpen, Clock, Calendar, CheckCircle2, AlertCircle, RefreshCw, Users, Layers } from "lucide-react";
 import Link from "next/link";
+import { formatTime } from "@/lib/utils";
 
 export default function MobileDashboard() {
   const router = useRouter();
@@ -235,7 +236,7 @@ export default function MobileDashboard() {
                     </div>
                     <div className="flex items-center gap-1 text-[9px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded border border-indigo-100/50 dark:border-indigo-900/30 shrink-0">
                       <Clock className="h-3 w-3" />
-                      {schedule.startTime} - {schedule.endTime}
+                      {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
                     </div>
                   </div>
 

@@ -12,7 +12,7 @@ import type { TeachingJournal, Schedule, Class, Subject } from "@/types";
 import { BookOpen, Plus, Calendar, ArrowLeft, Check, Info, Trash2, Edit2, Printer, FileText, Eye, X } from "lucide-react";
 import { toast } from "sonner";
 import { PrintHeader } from "@/components/PrintHeader";
-import { cn, formatDate } from "@/lib/utils";
+import { cn, formatDate, formatTime } from "@/lib/utils";
 
 export default function MobileTeachingJournalsPage() {
   const searchParams = useSearchParams();
@@ -337,7 +337,7 @@ export default function MobileTeachingJournalsPage() {
               >
                 {schedules.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.dayOfWeek} • Kelas {s.class?.name} • Mapel {s.subject?.name}
+                    {s.dayOfWeek} • Kelas {s.class?.name} • Mapel {s.subject?.name} ({formatTime(s.startTime)} - {formatTime(s.endTime)})
                   </option>
                 ))}
               </select>

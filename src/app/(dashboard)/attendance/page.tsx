@@ -445,7 +445,7 @@ export default function MobileAttendancePage() {
               >
                 {schedules.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.dayOfWeek} • Kelas {s.class?.name} • Mapel {s.subject?.name} ({s.startTime} - {s.endTime})
+                    {s.dayOfWeek} • Kelas {s.class?.name} • Mapel {s.subject?.name} ({formatTime(s.startTime)} - {formatTime(s.endTime)})
                   </option>
                 ))}
               </select>
@@ -605,7 +605,7 @@ export default function MobileAttendancePage() {
                       <div className="flex items-center gap-1.5 text-[9px] text-gray-400 mt-2 font-medium">
                         <Calendar className="h-3.5 w-3.5 text-indigo-500" />
                         {formatDate(att.attendanceDate)}{" "}
-                        ({att.schedule?.startTime} - {att.schedule?.endTime})
+                        ({att.schedule?.startTime ? formatTime(att.schedule.startTime) : "—"} - {att.schedule?.endTime ? formatTime(att.schedule.endTime) : "—"})
                       </div>
                     </div>
                   </div>
