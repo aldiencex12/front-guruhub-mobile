@@ -9,7 +9,7 @@ import { schedulesService } from "@/services/schedules";
 import { classesService } from "@/services/classes";
 import { subjectsService } from "@/services/subjects";
 import type { TeachingJournal, Schedule, Class, Subject } from "@/types";
-import { BookOpen, Plus, Calendar, ArrowLeft, Check, Info, Trash2, Edit2, Printer, FileText } from "lucide-react";
+import { BookOpen, Plus, Calendar, ArrowLeft, Check, Info, Trash2, Edit2, Printer, FileText, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { PrintHeader } from "@/components/PrintHeader";
 import { cn, formatDate } from "@/lib/utils";
@@ -21,6 +21,7 @@ export default function MobileTeachingJournalsPage() {
   const [activeTab, setActiveTab] = useState<"journals" | "daily" | "monthly">("journals");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingJournal, setEditingJournal] = useState<TeachingJournal | null>(null);
+  const [detailJournal, setDetailJournal] = useState<TeachingJournal | null>(null);
 
   // Query Lookups
   const { data: rawJournals = [], isLoading: loadingJournals, refetch: refetchJournals } = useQuery<TeachingJournal[]>({ 
@@ -208,13 +209,12 @@ export default function MobileTeachingJournalsPage() {
   }
 
   return (
-    <div className="space-y-4">
-      {/* HEADER SECTION */}
+    <div className="space-y-      {/* HEADER SECTION */}
       <div className="flex justify-between items-center bg-white dark:bg-gray-900 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm no-print">
         <div className="flex items-center gap-2">
-          {isFormOpen ? (
+          {isFormOpen || detailJournal ? (
             <button
-              onClick={handleCancel}
+              onClick={detailJournal ? () => setDetailJournal(null) : handleCancel}
               className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400"
             >
               <ArrowLeft className="h-5 w-5" />
@@ -223,12 +223,14 @@ export default function MobileTeachingJournalsPage() {
             <BookOpen className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
           )}
           <span className="text-sm font-bold text-gray-900 dark:text-white">
-            {isFormOpen ? (editingJournal ? "Edit Jurnal Mengajar" : "Input Jurnal") : "Jurnal Mengajar"}
+            {isFormOpen 
+              ? (editingJournal ? "Edit Jurnal Mengajar" : "Input Jurnal") 
+              : (detailJournal ? "Detail Jurnal Mengajar" : "Jurnal Mengajar")}
           </span>
         </div>
 
         <div className="flex gap-2">
-          {!isFormOpen && activeTab !== "journals" && (
+          {!isFormOpen && !detailJournal && activeTab !== "journals" && (
             <button
               onClick={handlePrint}
               className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-indigo-600 transition-colors"
@@ -237,7 +239,7 @@ export default function MobileTeachingJournalsPage() {
               <Printer className="h-4 w-4" />
             </button>
           )}
-          {!isFormOpen && (
+          {!isFormOpen && !detailJournal && (
             <button
               onClick={() => setIsFormOpen(true)}
               className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-sm"
@@ -250,7 +252,7 @@ export default function MobileTeachingJournalsPage() {
       </div>
 
       {/* TABS SELECTOR (no-print) */}
-      {!isFormOpen && (
+      {!isFormOpen && !detailJournal && (
         <div className="flex bg-white dark:bg-gray-900 p-1 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm no-print">
           {(["journals", "daily", "monthly"] as const).map((tab) => (
             <button
@@ -268,9 +270,10 @@ export default function MobileTeachingJournalsPage() {
           ))}
         </div>
       )}
+ )}
 
       {/* FILTER PANEL FOR RECAPS */}
-      {!isFormOpen && activeTab !== "journals" && (
+      {!isFormOpen && !detailJournal && activeTab !== "journals" && (
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm grid grid-cols-2 gap-3 no-print">
           <div className="space-y-1">
             <label className="text-[9px] uppercase font-bold text-gray-400">Kelas</label>
@@ -471,6 +474,13 @@ export default function MobileTeachingJournalsPage() {
 
                   <div className="flex gap-1">
                     <button
+                      onClick={() => setDetailJournal(journal)}
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                      title="Detail"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                    </button>
+                    <button
                       onClick={() => handleEdit(journal)}
                       className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                       title="Edit"
@@ -515,10 +525,75 @@ export default function MobileTeachingJournalsPage() {
         </div>
       )}
 
+      {/* JOURNAL DETAIL VIEW */}
+      {!isFormOpen && detailJournal && (
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 shadow-sm space-y-4 text-xs no-print">
+          <div className="flex justify-between items-start pb-3 border-b border-gray-100 dark:border-gray-800">
+            <div>
+              <span className="text-[10px] uppercase font-bold text-gray-400 block">Jadwal</span>
+              <span className="text-gray-950 dark:text-white font-bold text-sm">
+                Kelas {detailJournal.schedule?.class?.name || "-"} • Mapel {detailJournal.schedule?.subject?.name || "-"}
+              </span>
+              <div className="flex items-center gap-1.5 text-[10px] text-gray-500 mt-1">
+                <Calendar className="h-3.5 w-3.5 text-indigo-500" />
+                {formatDate(detailJournal.journalDate)}
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const j = detailJournal;
+                  setDetailJournal(null);
+                  handleEdit(j);
+                }}
+                className="flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 px-2.5 py-1.5 rounded-lg font-bold"
+              >
+                <Edit2 className="h-3.5 w-3.5" />
+                Edit
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <span className="text-[9px] uppercase font-bold text-gray-400 block">Topik / Materi</span>
+              <p className="text-gray-950 dark:text-white font-semibold text-sm mt-0.5">{detailJournal.topic}</p>
+            </div>
+
+            <div>
+              <span className="text-[9px] uppercase font-bold text-gray-400 block">Tujuan Pembelajaran</span>
+              <p className="text-gray-700 dark:text-gray-300 mt-0.5 whitespace-pre-wrap">{detailJournal.learningObjectives}</p>
+            </div>
+
+            <div>
+              <span className="text-[9px] uppercase font-bold text-gray-400 block">Metode Pembelajaran</span>
+              <p className="text-gray-700 dark:text-gray-300 mt-0.5">{detailJournal.teachingMethod}</p>
+            </div>
+
+            {detailJournal.reflection && (
+              <div>
+                <span className="text-[9px] uppercase font-bold text-gray-400 block">Refleksi</span>
+                <p className="text-gray-700 dark:text-gray-300 mt-0.5 whitespace-pre-wrap">{detailJournal.reflection}</p>
+              </div>
+            )}
+
+            {detailJournal.notes && (
+              <div>
+                <span className="text-[9px] uppercase font-bold text-gray-400 block">Catatan</span>
+                <p className="text-gray-700 dark:text-gray-300 mt-0.5 whitespace-pre-wrap">{detailJournal.notes}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* DAILY RECAP VIEW */}
-      {!isFormOpen && activeTab === "daily" && (
+      {!isFormOpen && !detailJournal && activeTab === "daily" && (
         <div className="space-y-4">
           <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm print:p-0 print:border-none print:shadow-none">
+
             
             {/* Kop Surat */}
             <PrintHeader 
@@ -582,7 +657,7 @@ export default function MobileTeachingJournalsPage() {
       )}
 
       {/* MONTHLY RECAP VIEW */}
-      {!isFormOpen && activeTab === "monthly" && (
+      {!isFormOpen && !detailJournal && activeTab === "monthly" && (
         <div className="space-y-4">
           <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm print:p-0 print:border-none print:shadow-none">
             
