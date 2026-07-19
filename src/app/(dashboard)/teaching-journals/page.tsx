@@ -22,6 +22,7 @@ export default function MobileTeachingJournalsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingJournal, setEditingJournal] = useState<TeachingJournal | null>(null);
   const [detailJournal, setDetailJournal] = useState<TeachingJournal | null>(null);
+  const [filterClassId, setFilterClassId] = useState<string>("ALL");
 
   // Query Lookups
   const { data: rawJournals = [], isLoading: loadingJournals, refetch: refetchJournals } = useQuery<TeachingJournal[]>({ 
@@ -61,6 +62,15 @@ export default function MobileTeachingJournalsPage() {
       };
     });
   }, [rawJournals, schedules]);
+
+  const filteredJournals = useMemo(() => {
+    return journals.filter((j) => {
+      if (filterClassId !== "ALL" && String(j.schedule?.classId) !== filterClassId) {
+        return false;
+      }
+      return true;
+    });
+  }, [journals, filterClassId]);
 
   const loading = loadingJournals || loadingSchedules || loadingClasses || loadingSubjects;
 
@@ -445,13 +455,34 @@ export default function MobileTeachingJournalsPage() {
       {/* JOURNAL LIST VIEW */}
       {!isFormOpen && activeTab === "journals" && (
         <div className="space-y-3 no-print">
-          {journals.length === 0 ? (
+          {/* Class Filter Dropdown */}
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
+            <div className="space-y-1">
+              <label className="text-[9px] uppercase font-bold text-gray-400 tracking-wider">Filter Kelas</label>
+              <select
+                value={filterClassId}
+                onChange={(e) => setFilterClassId(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="ALL">Semua Kelas</option>
+                {classes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {filteredJournals.length === 0 ? (
             <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-8 text-center text-xs text-gray-500 dark:text-gray-400 shadow-sm">
               <Info className="h-8 w-8 text-indigo-400 mx-auto mb-2" />
-              Belum ada riwayat pengisian jurnal mengajar.
+              {journals.length === 0 
+                ? "Belum ada riwayat pengisian jurnal mengajar." 
+                : "Tidak ada riwayat jurnal untuk kelas terpilih."}
             </div>
           ) : (
-            journals.map((journal) => (
+            filteredJournals.map((journal) => (
               <div
                 key={journal.id}
                 className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm space-y-3"
